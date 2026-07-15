@@ -31,3 +31,7 @@ const emailSchema = new mongoose.Schema({
     default: false,
   }
 });
+
+const Email = mongoose.model("Email", emailSchema);
+
+export default Email;
