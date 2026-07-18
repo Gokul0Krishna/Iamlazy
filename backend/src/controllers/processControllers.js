@@ -1,68 +1,88 @@
-import Emial from '../models/format.js';
-import axios from 'axios';
+import Email from "../models/format.js";
+import { extractEmailInfo } from "../services/openrouterService.js";
 
-export const processEmail = async (req, res) => {
-try{
-    if (testMode === true || testMode === "true") {
-      return res.status(200).json({
-        message: "Test mode active. Data parsed successfully but not saved.",
-        data: {
-          ...extractedData,
-          status: false
-        }
-      });
+/**
+ * Core reusable function: takes raw email body text, sends it to
+ * OpenRouter for extraction, and saves the structured result to MongoDB.
+ */
+export const processAndSaveEmail = async (emailBody) => {
+  const extracted = await extractEmailInfo(emailBody);
+
+  const emailDoc = new Email({
+    company_name: extracted.company_name || "Unknown",
+    registration_date: extracted.registration_date
+      ? new Date(extracted.registration_date)
+      : new Date(),
+    work_period: extracted.work_period || "",
+    stiphend: extracted.stiphend || "",
+    location: extracted.location || "",
+    company_website: extracted.company_website || "",
+    status: false,
+  });
+
+  await emailDoc.save();
+  return emailDoc;
+};
+
+// POST /api/process  { body: "<raw email text>" }
+// Useful for manually pasting an email body to test extraction without IMAP.
+export const processManualEmail = async (req, res) => {
+  try {
+    const { body } = req.body;
+    if (!body) {
+      return res.status(400).json({ message: "Email body is required" });
     }
-    const { apiKey, testMode, emailText } = req.body;
-    if (!apiKey) {
-      return res.status(400).json({ error: "API key is required" });
-    }
-    if (!emailText) {
-      return res.status(400).json({ error: "Email text is required" });
-    }
-    const response = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: "You are an AI that extracts specific structured data from emails into JSON format. Ensure all requested fields match the email details exactly. Parse dates into YYYY-MM-DD format."
-          },
-          {
-            role: "user",
-            content: emailText
-          }
-        ],
-        response_format: {
-          type: "json_object",
-          schema: {
-            type: "object",
-            properties: {
-              company_name: { type: "string" },
-              registration_date: { type: "string", description: "Format: YYYY-MM-DD" },
-              work_period: { type: "string" },
-              stiphend: { type: "string" },
-              location: { type: "string" },
-              company_website: { type: "string" }
-            },
-            required: ["company_name", "registration_date"]
-          }
-        }
-      },
-      {
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json"
-        }
-      }
-    );
-    const extractedData = JSON.parse(response.data.choices[0].message.content);
-}catch (error) {
-    console.error("Error processing email:", error.response?.data || error.message);
-    return res.status(500).json({
-      error: "Failed to process email content",
-      details: error.response?.data || error.message
-    });
+
+    const saved = await processAndSaveEmail(body);
+    res.status(201).json(saved);
+  } catch (error) {
+    console.error("Error processing email:", error.message);
+    res.status(500).json({ message: "Failed to process email", error: error.message });
   }
 };
 
+// GET /api/process
+export const getAllEntries = async (req, res) => {
+  try {
+    const entries = await Email.find().sort({ registration_date: -1 });
+    res.status(200).json(entries);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch entries", error: error.message });
+  }
+};
+
+// GET /api/process/:id
+export const getEntryById = async (req, res) => {
+  try {
+    const entry = await Email.findById(req.params.id);
+    if (!entry) return res.status(404).json({ message: "Entry not found" });
+    res.status(200).json(entry);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch entry", error: error.message });
+  }
+};
+
+// PATCH /api/process/:id/status  -> toggles the boolean status field
+export const toggleStatus = async (req, res) => {
+  try {
+    const entry = await Email.findById(req.params.id);
+    if (!entry) return res.status(404).json({ message: "Entry not found" });
+
+    entry.status = !entry.status;
+    await entry.save();
+    res.status(200).json(entry);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update status", error: error.message });
+  }
+};
+
+// DELETE /api/process/:id
+export const deleteEntry = async (req, res) => {
+  try {
+    const entry = await Email.findByIdAndDelete(req.params.id);
+    if (!entry) return res.status(404).json({ message: "Entry not found" });
+    res.status(200).json({ message: "Entry deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete entry", error: error.message });
+  }
+};

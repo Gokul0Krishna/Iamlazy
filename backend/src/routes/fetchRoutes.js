@@ -1,8 +1,9 @@
-import express from 'express';
-import { fetchmails } from '../controllers/fetchControllers.js';
+import express from "express";
+import { checkInbox } from "../controllers/fetchControllers.js";
 
 const router = express.Router();
 
-router.post("/mail", fetchmails)
+// GET /api/fetch/check -> manually trigger IMAP inbox check + processing
+router.get("/check", checkInbox);
 
 export default router;

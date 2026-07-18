@@ -1,14 +1,21 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "MERN notes app backend - fetches emails via IMAP, extracts structured info via OpenRouter, stores in MongoDB",
+  "type": "module",
+  "main": "src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
   },
-  "keywords": [],
-  "type": "commonjs",
   "dependencies": {
-    "express": "^4.18.2"
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "imapflow": "^1.0.171",
+    "mailparser": "^3.7.2",
+    "mongoose": "^8.9.5",
+    "node-cron": "^3.0.3"
   }
 }
