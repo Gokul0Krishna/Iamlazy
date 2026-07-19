@@ -32,22 +32,29 @@ const startServer = async () => {
     console.log(`Server running on port ${PORT}`);
   });
 
-  // Automatically poll the inbox on a schedule (default: every 5 minutes)
-  const cronSchedule = process.env.INBOX_CHECK_CRON || "*/60 * * * *";
-  cron.schedule(cronSchedule, async () => {
-    console.log("Running scheduled inbox check...");
-    try {
-      const emails = await fetchNewEmails();
-      for (const email of emails) {
-        await processAndSaveEmail(email.body);
+  // Cron polling is opt-in — set ENABLE_CRON=true in .env once you're ready
+  // to let it auto-check the inbox. Left off by default so it doesn't fire
+  // OpenRouter/IMAP calls while you're testing endpoints manually.
+  if (process.env.ENABLE_CRON === "true") {
+    const cronSchedule = process.env.INBOX_CHECK_CRON || "*/60 * * * *";
+    cron.schedule(cronSchedule, async () => {
+      console.log("Running scheduled inbox check...");
+      try {
+        const emails = await fetchNewEmails();
+        for (const email of emails) {
+          await processAndSaveEmail(email.body);
+        }
+        if (emails.length) {
+          console.log(`Processed ${emails.length} new email(s).`);
+        }
+      } catch (err) {
+        console.error("Scheduled inbox check failed:", err.message);
       }
-      if (emails.length) {
-        console.log(`Processed ${emails.length} new email(s).`);
-      }
-    } catch (err) {
-      console.error("Scheduled inbox check failed:", err.message);
-    }
-  });
+    });
+    console.log(`Cron inbox polling enabled (${cronSchedule})`);
+  } else {
+    console.log("Cron inbox polling disabled — hit /api/fetch/check manually to test.");
+  }
 };
 
-// startServer();
+startServer();
