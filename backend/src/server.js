@@ -6,7 +6,7 @@ import cron from "node-cron";
 import connectDB from "./config/db.js";
 import fetchRoutes from "./routes/fetchRoutes.js";
 import processRoutes from "./routes/processRoutes.js";
-import { fetchNewEmails } from "./services/imapService.js";
+import { fetchNewEmails } from "./services/getemailService.js";
 import { processAndSaveEmail } from "./controllers/processControllers.js";
 
 dotenv.config();
@@ -33,7 +33,7 @@ const startServer = async () => {
   });
 
   // Automatically poll the inbox on a schedule (default: every 5 minutes)
-  const cronSchedule = process.env.INBOX_CHECK_CRON || "*/5 * * * *";
+  const cronSchedule = process.env.INBOX_CHECK_CRON || "*/60 * * * *";
   cron.schedule(cronSchedule, async () => {
     console.log("Running scheduled inbox check...");
     try {

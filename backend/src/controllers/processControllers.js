@@ -1,5 +1,5 @@
 import Email from "../models/format.js";
-import { extractEmailInfo } from "../services/openrouterService.js";
+import { extractEmailInfo } from "../services/emailprocessService.js";
 
 /**
  * Core reusable function: takes raw email body text, sends it to
