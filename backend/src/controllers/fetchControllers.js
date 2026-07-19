@@ -1,4 +1,4 @@
-import { fetchNewEmails } from "../services/imapService.js";
+import { fetchNewEmails } from "../services/getemailService.js";
 import { processAndSaveEmail } from "./processControllers.js";
 
 // GET /api/fetch/check

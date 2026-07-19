@@ -1,6 +1,8 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import cron from "node-cron";
 
 import connectDB from "./config/db.js";
@@ -8,8 +10,6 @@ import fetchRoutes from "./routes/fetchRoutes.js";
 import processRoutes from "./routes/processRoutes.js";
 import { fetchNewEmails } from "./services/getemailService.js";
 import { processAndSaveEmail } from "./controllers/processControllers.js";
-
-dotenv.config();
 
 const app = express();
 
@@ -50,4 +50,4 @@ const startServer = async () => {
   });
 };
 
-startServer();
+// startServer();
