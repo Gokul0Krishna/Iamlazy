@@ -8,6 +8,7 @@ import cron from "node-cron";
 import connectDB from "./config/db.js";
 import fetchRoutes from "./routes/fetchRoutes.js";
 import processRoutes from "./routes/processRoutes.js";
+import dbRoutes from "./routes/dbRoutes.js";
 import { fetchNewEmails } from "./services/getemailService.js";
 import { processAndSaveEmail } from "./controllers/processControllers.js";
 
@@ -18,6 +19,7 @@ app.use(express.json());
 
 app.use("/api/fetch", fetchRoutes);
 app.use("/api/process", processRoutes);
+app.use("/api/db",dbRoutes);
 
 app.get("/", (req, res) => {
   res.send("Notes App API is running");
